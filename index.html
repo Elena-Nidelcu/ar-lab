@@ -1,75 +1,119 @@
-<!-- import aframe and then ar.js with image tracking / location based features -->
-<script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93967b5412487cd94b290b/dist/aframe-master.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AR Interaction Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
-<!-- style for the loader -->
-<style>
-  .arjs-loader {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- AR.js for A-Frame (marker-based AR) -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+  <!-- Super Hands (drag, stretch, rotate, hover) -->
+  <script src="https://unpkg.com/super-hands@3.0.3/dist/super-hands.min.js"></script>
 
-  .arjs-loader div {
-    text-align: center;
-    font-size: 1.25em;
-    color: white;
-  }
-</style>
-
-<body style="margin : 0px; overflow: hidden;">
-  <!-- minimal loader shown until image descriptors are loaded. Loading may take a while according to the device computational power -->
-  <div class="arjs-loader">
-    <div>Loading, please wait...</div>
+  <style>
+    body { margin:0; overflow:hidden; }
+    /* Simple overlay UI */
+    .hud {
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: grid; grid-template-columns: repeat(5, auto); gap: 8px;
+      font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      z-index: 10; pointer-events: none;
+    }
+    .hud button {
+      pointer-events: auto;
+      padding: 10px 12px; border: 0; border-radius: 10px;
+      background: rgba(255,255,255,.9);
+    }
+  </style>
+</head>
+<body>
+  <!-- UI overlay -->
+  <div class="hud">
+    <button id="btn-rot-l">⟲</button>
+    <button id="btn-rot-r">⟳</button>
+    <button id="btn-scale--">−</button>
+    <button id="btn-scale-+">＋</button>
+    <button id="btn-color">🎨</button>
   </div>
 
-  <!-- a-frame scene -->
   <a-scene
-    vr-mode-ui="enabled: false;"
-    renderer="logarithmicDepthBuffer: true;"
     embedded
-    arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"
-  >
-    <!-- a-nft is the anchor that defines an Image Tracking entity -->
-    <!-- on 'url' use the path to the Image Descriptors created before. -->
-    <!-- the path should end with the name without the extension e.g. if file is 'pinball.fset' the path should end with 'pinball' -->
-    <a-nft
-      type="nft"
-      url="ap"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5"
-    >
-      <!-- as a child of the a-nft entity, you can define the content to show. here's a GLTF model entity -->
-      <a-entity
-        gltf-model="BoxInstanced.gltf"
-        scale="45 45 45"
-        position="50 150 0"
-        
-               
-      >
-      </a-entity>
-       
-    </a-nft> 
-    <a-entity position="1 0 0" scale="3 3 3" text="value: HELLO;color:yellow"></a-entity>
+    renderer="colorManagement: true; physicallyCorrectLights: true"
+    xr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; detectionMode: mono; debugUIEnabled: false">
 
-   <!--  <a-text 
-    value="Hello, AR World!" 
-    color="yellow" 
-    width="4" 
-    position="50 150 0"
-    
-    
-  >-->
-    <!-- static camera that moves according to the device movemenents -->
+    <!-- Touch ray so taps/drags work on phones -->
+    <a-entity id="touchRay"
+              cursor="rayOrigin: mouse"
+              raycaster="objects: .interact">
+    </a-entity>
+
+    <!-- Light for PBR -->
+    <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+    <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
+
+    <!-- Marker root -->
+    <a-marker preset="hiro" id="marker">
+      <!-- Interaction root (class=interact to be ray-targetable) -->
+      <a-entity id="rig" class="interact"
+                position="0 0 0"
+                super-hands></a-entity>
+
+      <!-- The object to manipulate -->
+      <a-box id="cube" class="interact"
+             position="0 0.25 0" depth="0.5" height="0.5" width="0.5"
+             material="metalness:0.1; roughness:0.6; color:#4CC3D9"
+             hoverable grabbable draggable stretchable rotatable>
+      </a-box>
+
+      <!-- Small ground to visualize marker plane -->
+      <a-cylinder radius="0.01" height="0.001" color="#888"></a-cylinder>
+    </a-marker>
+
     <a-entity camera></a-entity>
   </a-scene>
+
+  <script>
+    // Utility: clamp scale
+    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+    const cube = document.getElementById('cube');
+
+    // Rotate buttons
+    document.getElementById('btn-rot-l').addEventListener('click', () => nudgeRot(-15));
+    document.getElementById('btn-rot-r').addEventListener('click', () => nudgeRot( 15));
+    function nudgeRot(delta){
+      const r = cube.getAttribute('rotation');
+      cube.setAttribute('rotation', {x:r.x, y:r.y + delta, z:r.z});
+    }
+
+    // Scale buttons
+    document.getElementById('btn-scale--').addEventListener('click', () => nudgeScale(0.9));
+    document.getElementById('btn-scale-+').addEventListener('click', () => nudgeScale(1.1));
+    function nudgeScale(mult){
+      const s = cube.getAttribute('scale');
+      const nx = clamp(s.x * mult, 0.2, 3);
+      const ny = clamp(s.y * mult, 0.2, 3);
+      const nz = clamp(s.z * mult, 0.2, 3);
+      cube.setAttribute('scale', {x:nx, y:ny, z:nz});
+    }
+
+    // Color cycle
+    const colors = ['#4CC3D9','#FFC65D','#7BC8A4','#EF2D5E','#FFFFFF'];
+    let ci = 0;
+    document.getElementById('btn-color').addEventListener('click', () => {
+      ci = (ci + 1) % colors.length;
+      cube.setAttribute('material', 'color', colors[ci]);
+    });
+
+    // Optional: visual hover feedback via super-hands events
+    cube.addEventListener('hover-start', () => cube.setAttribute('material', 'emissive', '#222'));
+    cube.addEventListener('hover-end',   () => cube.setAttribute('material', 'emissive', '#000'));
+
+    // Tip: students can also two-finger pinch/rotate with "stretchable" & "rotatable"
+    // (provided by super-hands). Drag the object across the marker with "draggable".
+  </script>
 </body>
+</html>
