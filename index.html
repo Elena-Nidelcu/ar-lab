@@ -115,5 +115,30 @@
     // Tip: students can also two-finger pinch/rotate with "stretchable" & "rotatable"
     // (provided by super-hands). Drag the object across the marker with "draggable".
   </script>
+  <script>
+// Fire "tap","doubletap","longpress" on an entity.
+AFRAME.registerComponent('tap-gestures', {
+  schema: {longMs:{default:500}},
+  init() {
+    let t1 = 0, pressTimer = null, down = false;
+    this.el.addEventListener('mousedown', () => {
+      down = true;
+      const now = performance.now();
+      // double tap if within 300ms
+      if (now - t1 < 300) this.el.emit('doubletap');
+      t1 = now;
+      pressTimer = setTimeout(() => {
+        if (down) this.el.emit('longpress');
+      }, this.data.longMs);
+    });
+    this.el.addEventListener('mouseup', () => {
+      down = false;
+      clearTimeout(pressTimer);
+      this.el.emit('tap');
+    });
+    this.el.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+  }
+});
+</script>
 </body>
 </html>
