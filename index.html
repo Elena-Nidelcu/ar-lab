@@ -12,15 +12,61 @@
   <!-- Super Hands (drag, stretch, rotate, hover) -->
   <script src="https://unpkg.com/super-hands@3.0.3/dist/super-hands.min.js"></script>
 
+  <!-- Components FIRST (so they're available when the scene parses) -->
+  <script>
+  // Tap / doubletap / longpress events
+  AFRAME.registerComponent('tap-gestures', {
+    schema: {longMs:{default:500}},
+    init () {
+      let t1 = 0, pressTimer = null, down = false;
+      this.el.addEventListener('mousedown', () => {
+        down = true;
+        const now = performance.now();
+        if (now - t1 < 300) this.el.emit('doubletap');
+        t1 = now;
+        pressTimer = setTimeout(() => { if (down) this.el.emit('longpress'); }, this.data.longMs);
+      });
+      this.el.addEventListener('mouseup', () => {
+        down = false;
+        clearTimeout(pressTimer);
+        this.el.emit('tap');
+      });
+      this.el.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+    }
+  });
+
+  // Spin toggler + random color handler
+  AFRAME.registerComponent('spin-toggle', {
+    schema:{speed:{default:4000}},
+    init(){
+      this.spinning = false;
+      this.el.addEventListener('toggle-spin', ()=> {
+        this.spinning = !this.spinning;
+        if (this.spinning) {
+          this.el.setAttribute('animation__spin',
+            `property: rotation; to: 0 360 0; loop: true; dur: ${this.data.speed}`);
+        } else {
+          this.el.removeAttribute('animation__spin');
+        }
+      });
+      this.el.addEventListener('random-color', ()=> {
+        const colors = ['#4CC3D9','#FFC65D','#7BC8A4','#EF2D5E','#FFFFFF'];
+        const c = colors[Math.floor(Math.random()*colors.length)];
+        this.el.setAttribute('material','color',c);
+      });
+    }
+  });
+  </script>
+
   <style>
     body { margin:0; overflow:hidden; }
-    /* Simple overlay UI */
     .hud {
       position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
       display: grid; grid-template-columns: repeat(5, auto); gap: 8px;
       font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       z-index: 10; pointer-events: none;
     }
+    .hud.hidden { display: none; }
     .hud button {
       pointer-events: auto;
       padding: 10px 12px; border: 0; border-radius: 10px;
@@ -30,7 +76,7 @@
 </head>
 <body>
   <!-- UI overlay -->
-  <div class="hud">
+  <div class="hud" id="hud">
     <button id="btn-rot-l">⟲</button>
     <button id="btn-rot-r">⟳</button>
     <button id="btn-scale--">−</button>
@@ -44,33 +90,29 @@
     xr-mode-ui="enabled: false"
     arjs="sourceType: webcam; detectionMode: mono; debugUIEnabled: false">
 
-    <!-- Touch ray so taps/drags work on phones -->
+    <!-- Touch ray so taps/drags work on phones; super-hands lives HERE -->
     <a-entity id="touchRay"
               cursor="rayOrigin: mouse"
-              raycaster="objects: .interact">
+              raycaster="objects: .interact"
+              super-hands="colliderEvent: raycaster-intersection; colliderEventProperty: els; grabStartButtons: mousedown; grabEndButtons: mouseup">
     </a-entity>
 
-    <!-- Light for PBR -->
+    <!-- Lights -->
     <a-entity light="type: ambient; intensity: 0.8"></a-entity>
     <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
 
     <!-- Marker root -->
     <a-marker preset="hiro" id="marker">
-      <!-- Interaction root (class=interact to be ray-targetable) -->
-      <a-entity id="rig" class="interact"
-                position="0 0 0"
-                super-hands></a-entity>
+      <!-- (No super-hands here) -->
+      <a-entity id="rig" position="0 0 0"></a-entity>
 
-      <!-- The object to manipulate -->
+      <!-- The object to manipulate (only ONE cube, unique ID) -->
       <a-box id="cube" class="interact"
              position="0 0.25 0" depth="0.5" height="0.5" width="0.5"
              material="metalness:0.1; roughness:0.6; color:#4CC3D9"
              hoverable grabbable draggable stretchable rotatable
-             tap-gestures>
+             tap-gestures spin-toggle>
       </a-box>
-      <a-box id="cube" class="interact"
-       tap-gestures
-       hoverable grabbable draggable stretchable rotatable></a-box>
 
       <!-- Small ground to visualize marker plane -->
       <a-cylinder radius="0.01" height="0.001" color="#888"></a-cylinder>
@@ -80,12 +122,12 @@
   </a-scene>
 
   <script>
-    // Utility: clamp scale
-    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
-
+    // ------- UI logic & interactions -------
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const hud  = document.getElementById('hud');
     const cube = document.getElementById('cube');
 
-    // Rotate buttons
+    // Buttons
     document.getElementById('btn-rot-l').addEventListener('click', () => nudgeRot(-15));
     document.getElementById('btn-rot-r').addEventListener('click', () => nudgeRot( 15));
     function nudgeRot(delta){
@@ -93,63 +135,27 @@
       cube.setAttribute('rotation', {x:r.x, y:r.y + delta, z:r.z});
     }
 
-    // Scale buttons
     document.getElementById('btn-scale--').addEventListener('click', () => nudgeScale(0.9));
     document.getElementById('btn-scale-+').addEventListener('click', () => nudgeScale(1.1));
     function nudgeScale(mult){
       const s = cube.getAttribute('scale');
-      const nx = clamp(s.x * mult, 0.2, 3);
-      const ny = clamp(s.y * mult, 0.2, 3);
-      const nz = clamp(s.z * mult, 0.2, 3);
-      cube.setAttribute('scale', {x:nx, y:ny, z:nz});
+      cube.setAttribute('scale', {
+        x: clamp(s.x * mult, 0.2, 3),
+        y: clamp(s.y * mult, 0.2, 3),
+        z: clamp(s.z * mult, 0.2, 3)
+      });
     }
 
-    // Color cycle
-    const colors = ['#4CC3D9','#FFC65D','#7BC8A4','#EF2D5E','#FFFFFF'];
-    let ci = 0;
-    document.getElementById('btn-color').addEventListener('click', () => {
-      ci = (ci + 1) % colors.length;
-      cube.setAttribute('material', 'color', colors[ci]);
-    });
+    document.getElementById('btn-color').addEventListener('click', () => cube.emit('random-color'));
 
-    // Optional: visual hover feedback via super-hands events
+    // Hover feedback (from super-hands)
     cube.addEventListener('hover-start', () => cube.setAttribute('material', 'emissive', '#222'));
     cube.addEventListener('hover-end',   () => cube.setAttribute('material', 'emissive', '#000'));
 
-    // Tip: students can also two-finger pinch/rotate with "stretchable" & "rotatable"
-    // (provided by super-hands). Drag the object across the marker with "draggable".
+    // Gestures
+    cube.addEventListener('tap',       () => cube.emit('toggle-spin'));        // single tap: spin on/off
+    cube.addEventListener('doubletap', () => cube.emit('random-color'));       // double tap: recolor
+    cube.addEventListener('longpress', () => hud.classList.toggle('hidden'));  // long press: hide/show HUD
   </script>
-  <script>
-// Fire "tap","doubletap","longpress" on an entity.
-AFRAME.registerComponent('tap-gestures', {
-  schema: {longMs:{default:500}},
-  init() {
-    let t1 = 0, pressTimer = null, down = false;
-    this.el.addEventListener('mousedown', () => {
-      down = true;
-      const now = performance.now();
-      // double tap if within 300ms
-      if (now - t1 < 300) this.el.emit('doubletap');
-      t1 = now;
-      pressTimer = setTimeout(() => {
-        if (down) this.el.emit('longpress');
-      }, this.data.longMs);
-    });
-    this.el.addEventListener('mouseup', () => {
-      down = false;
-      clearTimeout(pressTimer);
-      this.el.emit('tap');
-    });
-    this.el.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
-  }
-});
-</script>
-<script>
-const cube = document.querySelector('#cube');
-cube.addEventListener('tap',       () => cube.emit('toggle-spin'));
-cube.addEventListener('doubletap', () => cube.emit('random-color'));
-cube.addEventListener('longpress', () => document.querySelector('#hud').classList.toggle('open'));
-</script>
-
 </body>
 </html>
