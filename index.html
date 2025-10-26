@@ -12,17 +12,33 @@
     <style>
       body, html { margin: 0; overflow: hidden; height: 100%; width: 100%; }
     </style>
+
+    <script>
+      // Force HD camera input for NFT markers
+      window.ARjs = {
+        sourceParameters: {
+          sourceType: 'webcam',
+          facingMode: 'environment',
+          constraints: {
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            }
+          }
+        }
+      };
+    </script>
   </head>
   <body>
     <a-scene
       vr-mode-ui="enabled: false"
-      renderer="logarithmicDepthBuffer: true;"
+      renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
       embedded
-      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+      arjs="trackingMethod: best; sourceType: webcam; performanceMode: false; debugUIEnabled: false;">
 
       <!-- Lights -->
-      <a-entity light="type: ambient; intensity: 0.8"></a-entity>
-      <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
+      <a-entity light="type: ambient; intensity: 1.0"></a-entity>
+      <a-entity light="type: directional; intensity: 0.8" position="0 1 1"></a-entity>
 
       <!-- Quentin Tarantino book -->
       <a-nft type="nft" url="hollywood" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
