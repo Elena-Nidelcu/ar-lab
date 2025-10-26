@@ -1,30 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AR Lab - Vincent Vega</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Quentin Tarantino AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <!-- AR.js for marker-based AR -->
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-</head>
-<body style="margin: 0; overflow: hidden;">
+    <!-- A-Frame and AR.js -->
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
 
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false">
-    <!-- Marker -->
-    <a-marker preset="hiro">
-      <!-- GLB Model -->
-      <a-entity gltf-model="vincent_vega.glb"
-                scale="0.5 0.5 0.5"
-                position="0 0 0"
-                rotation="90 180 0">
-      </a-entity>
-    </a-marker>
+    <style>
+      body, html { margin: 0; overflow: hidden; height: 100%; width: 100%; }
+    </style>
+  </head>
+  <body>
+    <a-scene
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true;"
+      embedded
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
 
-    <a-entity camera></a-entity>
-  </a-scene>
+      <!-- Lights -->
+      <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+      <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
 
-</body>
+      <!-- Quentin Tarantino book -->
+      <a-nft type="nft" url="hollywood" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity gltf-model="quentin_tarentino.glb"
+                  scale="0.5 0.5 0.5"
+                  position="0 0 0"
+                  rotation="90 180 0"></a-entity>
+      </a-nft>
+
+      <!-- Pulp Fiction cup -->
+      <a-nft type="nft" url="pulp_fiction" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity gltf-model="vincent_vega.glb"
+                  scale="0.5 0.5 0.5"
+                  position="0 0 0"
+                  rotation="90 180 0"></a-entity>
+      </a-nft>
+
+      <!-- Reservoir Dogs t-shirt -->
+      <a-nft type="nft" url="reservoir_dogs" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity gltf-model="reservoir_dogs_glasses_-_sgp26.glb"
+                  scale="0.5 0.5 0.5"
+                  position="0 0 0"
+                  rotation="90 180 0"></a-entity>
+      </a-nft>
+
+      <!-- Kill Bill phone case -->
+      <a-nft type="nft" url="kill_bill" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity gltf-model="uma_thurman_kill_bill.glb"
+                  scale="0.5 0.5 0.5"
+                  position="0 0 0"
+                  rotation="90 180 0"></a-entity>
+      </a-nft>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
 </html>
