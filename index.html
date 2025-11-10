@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <title>Quentin Tarantino AR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- A-Frame & AR.js NFT -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.4/aframe/build/aframe-ar-nft.js"></script>
-  
+
   <style>
     body, html { margin: 0; overflow: hidden; width: 100%; height: 100%; }
     #statusBox {
@@ -21,6 +21,7 @@
       border-radius: 8px;
       font-family: sans-serif;
       font-size: 14px;
+      z-index: 10;
     }
   </style>
 </head>
@@ -32,7 +33,7 @@
     embedded
     renderer="logarithmicDepthBuffer: true;"
     arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
-    
+
     <!-- Lights -->
     <a-entity light="type: ambient; intensity: 0.8"></a-entity>
     <a-entity light="type: directional; intensity: 0.6" position="0 1 1"></a-entity>
@@ -41,8 +42,8 @@
     <a-nft id="marker-hollywood" type="nft" url="hollywood">
       <a-entity id="model-hollywood"
                 gltf-model="quentin_tarentino.glb"
-                scale="50 50 50"
-                position="50 150 0"
+                scale="1 1 1"
+                position="0 0 0"
                 rotation="-90 0 0"
                 visible="false"></a-entity>
     </a-nft>
@@ -51,8 +52,8 @@
     <a-nft id="marker-reservoir" type="nft" url="reservoir_dogs">
       <a-entity id="model-reservoir"
                 gltf-model="reservoir_dogs_glasses_-_sgp26.glb"
-                scale="10 10 10"
-                position="50 150 0"
+                scale="1 1 1"
+                position="0 0 0"
                 rotation="90 180 0"
                 visible="false"></a-entity>
     </a-nft>
@@ -61,14 +62,14 @@
     <a-nft id="marker-pulp" type="nft" url="pulp_fiction">
       <a-entity id="model-pulp"
                 gltf-model="vincent_vega.glb"
-                scale="50 50 50"
-                position="50 150 0"
+                scale="1 1 1"
+                position="0 0 0"
                 rotation="90 180 0"
                 visible="false"></a-entity>
     </a-nft>
 
-    <!-- Kill Bill (independent) -->
-    <a-nft type="nft" url="kill_bill">
+    <!-- Kill Bill marker -->
+    <a-nft id="marker-killbill" type="nft" url="kill_bill">
       <a-entity gltf-model="uma_thurman_kill_bill.glb"
                 scale="0.5 0.5 0.5"
                 position="0 0 0"
@@ -91,7 +92,7 @@
     let hollywoodScanned = false;
     let reservoirScanned = false;
 
-    // --- Hollywood marker ---
+    // --- Hollywood ---
     markerHollywood.addEventListener('markerFound', () => {
       modelHollywood.setAttribute('visible', 'true');
       if (!hollywoodScanned) {
@@ -103,7 +104,7 @@
       modelHollywood.setAttribute('visible', 'false');
     });
 
-    // --- Reservoir Dogs marker ---
+    // --- Reservoir Dogs ---
     markerReservoir.addEventListener('markerFound', () => {
       if (hollywoodScanned) {
         modelReservoir.setAttribute('visible', 'true');
@@ -112,20 +113,20 @@
           statusBox.innerHTML = '✅ Reservoir Dogs scanned! Now scan the next movie';
         }
       } else {
-        statusBox.innerHTML = '⚠️ You must scan previous movie first!';
+        statusBox.innerHTML = '⚠️ Scan Hollywood first!';
       }
     });
     markerReservoir.addEventListener('markerLost', () => {
       modelReservoir.setAttribute('visible', 'false');
     });
 
-    // --- Pulp Fiction marker ---
+    // --- Pulp Fiction ---
     markerPulp.addEventListener('markerFound', () => {
       if (hollywoodScanned && reservoirScanned) {
         modelPulp.setAttribute('visible', 'true');
         statusBox.innerHTML = '🎉 All markers scanned in order! Tarantino universe complete 🍿';
       } else if (!reservoirScanned) {
-        statusBox.innerHTML = '⚠️ You must scan previous movie before this one';
+        statusBox.innerHTML = '⚠️ Scan Reservoir Dogs before this';
       }
     });
     markerPulp.addEventListener('markerLost', () => {
