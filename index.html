@@ -44,7 +44,7 @@
                 gltf-model="baby.glb"
                 scale="100 100 100"
                 position="0 0 0"
-                rotation="-90 0 0"
+                rotation="90 0 0"
                 visible="false"></a-entity>
     </a-nft>
 
@@ -54,7 +54,7 @@
                 gltf-model="human.glb"
                 scale="50 50 50"
                 position="0 0 0"
-                rotation="90 180 0"
+                rotation="-90 180 0"
                 visible="false"></a-entity>
     </a-nft>
 
@@ -64,7 +64,7 @@
                 gltf-model="oldman_ernest.glb"
                 scale="10 10 10"
                 position="0 0 0"
-                rotation="90 180 0"
+                rotation="-90 180 0"
                 visible="false"></a-entity>
     </a-nft>
 
@@ -97,7 +97,7 @@
       modelHollywood.setAttribute('visible', 'true');
       if (!hollywoodScanned) {
         hollywoodScanned = true;
-        statusBox.innerHTML = '✅ Tarantino scanned! Now scan the next movie';
+        statusBox.innerHTML = '✅ Baby scanned! Now scan the next movie';
       }
     });
     markerHollywood.addEventListener('markerLost', () => {
@@ -110,10 +110,10 @@
         modelReservoir.setAttribute('visible', 'true');
         if (!reservoirScanned) {
           reservoirScanned = true;
-          statusBox.innerHTML = '✅ Reservoir Dogs scanned! Now scan the next movie';
+          statusBox.innerHTML = '✅ Adult scanned! Now scan the next movie';
         }
       } else {
-        statusBox.innerHTML = '⚠️ Scan Hollywood first!';
+        statusBox.innerHTML = '⚠️ Scan baby first!';
       }
     });
     markerReservoir.addEventListener('markerLost', () => {
@@ -126,7 +126,7 @@
         modelPulp.setAttribute('visible', 'true');
         statusBox.innerHTML = '🎉 All markers scanned in order! Tarantino universe complete 🍿';
       } else if (!reservoirScanned) {
-        statusBox.innerHTML = '⚠️ Scan Reservoir Dogs before this';
+        statusBox.innerHTML = '⚠️ Scan adult before this';
       }
     });
     markerPulp.addEventListener('markerLost', () => {
