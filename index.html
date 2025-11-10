@@ -26,7 +26,7 @@
   </style>
 </head>
 <body>
-  <div id="statusBox">Scan the <b>Hollywood</b> marker first 🎬</div>
+  <div id="statusBox">Scan the baby marker first</div>
 
   <a-scene
     vr-mode-ui="enabled: false"
@@ -97,7 +97,7 @@
       modelHollywood.setAttribute('visible', 'true');
       if (!hollywoodScanned) {
         hollywoodScanned = true;
-        statusBox.innerHTML = '✅ Baby scanned! Now scan the next movie';
+        statusBox.innerHTML = '✅ Baby scanned! Now scan the next phase';
       }
     });
     markerHollywood.addEventListener('markerLost', () => {
@@ -110,7 +110,7 @@
         modelReservoir.setAttribute('visible', 'true');
         if (!reservoirScanned) {
           reservoirScanned = true;
-          statusBox.innerHTML = '✅ Adult scanned! Now scan the next movie';
+          statusBox.innerHTML = '✅ Adult scanned! Now scan the next phase';
         }
       } else {
         statusBox.innerHTML = '⚠️ Scan baby first!';
@@ -124,7 +124,7 @@
     markerPulp.addEventListener('markerFound', () => {
       if (hollywoodScanned && reservoirScanned) {
         modelPulp.setAttribute('visible', 'true');
-        statusBox.innerHTML = '🎉 All markers scanned in order! Tarantino universe complete 🍿';
+        statusBox.innerHTML = 'All markers scanned in order! Life-cycle complete';
       } else if (!reservoirScanned) {
         statusBox.innerHTML = '⚠️ Scan adult before this';
       }
